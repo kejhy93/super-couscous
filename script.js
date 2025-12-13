@@ -1,7 +1,7 @@
 // script.js
 
 // Configuration - CHANGE THIS
-const channelName = 'liveoliverr';
+const channelName = 'hejnaluk';
 
 // This will store user data
 const users = new Map();
