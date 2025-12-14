@@ -74,3 +74,5 @@ function createAvatar(username) {
         animationTimeout: null
     });
 }
+
+handleNewMessage('hejnaluk');

@@ -28,12 +28,27 @@ body, html {
     background-image: url('assets/character1-idle.png');
     /* Corrected to a single row (128x256) */
     background-size: 832px 256px;
-    animation: idle-animation 1s steps(2) infinite;
+    animation: idle-animation-left 1s steps(2) infinite;
 }
 
 @keyframes idle-animation {
     from { background-position: 0 0; }
     to { background-position: -128px 0; } /* Cycle through 2 frames */
+}
+
+@keyframes idle-animation-down {
+    from { background-position: 0 128px; }
+    to { background-position: -128px 128px; } /* Cycle through 2 frames */
+}
+
+@keyframes idle-animation-left {
+    from { background-position: 0 192px; }
+    to { background-position: -128px 192px; } /* Cycle through 2 frames */
+}
+
+@keyframes idle-animation-right {
+    from { background-position: 0 64px; }
+    to { background-position: -128px 64px; } /* Cycle through 2 frames */
 }
 
 
@@ -42,10 +57,25 @@ body, html {
     background-image: url('assets/character1-walk.png');
     /* Corrected to a single row (576x256) */
     background-size: 832px 256px;
-    animation: walk-animation 1s steps(9) infinite;
+    animation: walk-animation-left 1s steps(9) infinite;
 }
 
 @keyframes walk-animation {
     from { background-position: 0 0; }
     to { background-position: -576px 0; } /* Cycle through 9 frames */
+}
+
+@keyframes walk-animation-down {
+    from { background-position: 0 126px; }
+    to { background-position: -576px 128px; } /* Cycle through 9 frames */
+}
+
+@keyframes walk-animation-left {
+    from { background-position: 0 192px; }
+    to { background-position: -576px 192px; } /* Cycle through 9 frames */
+}
+
+@keyframes walk-animation-right {
+    from { background-position: 0 64px; }
+    to { background-position: -576px 64px; } /* Cycle through 9 frames */
 }
