@@ -10,6 +10,30 @@ function log(...args) {
     if (!DEBUG) return;
     console.log('[user-presence]', ...args);
 }
+
+// Dump a compact snapshot of the current internal state (users map)
+function debugState() {
+    if (!DEBUG) return;
+    const snapshot = {};
+    for (const [k, v] of users.entries()) {
+        snapshot[k] = {
+            direction: v.direction,
+            state: v.element.classList.contains('is-walking') ? 'walking' : 'idle',
+            hasAuto: !!v._autoBehavior,
+            hasAnimationTimeout: !!v.animationTimeout
+        };
+    }
+    console.log('[user-presence] STATE SNAPSHOT', snapshot);
+}
+
+// This will store user data
+const users = new Map();
+const avatarContainer = document.getElementById('avatar-container');
+
+function log(...args) {
+    if (!DEBUG) return;
+    console.log('[user-presence]', ...args);
+}
 // script.js
 
 // Provide a factory so the logic can be unit-tested with injected dependencies.
