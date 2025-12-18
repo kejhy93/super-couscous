@@ -3,6 +3,29 @@
 // Configuration - CHANGE THIS
 const channelName = 'hejnaluk';
 
+// Toggle debug logging (set to false to silence logs)
+const DEBUG = true;
+
+function log(...args) {
+    if (!DEBUG) return;
+    console.log('[user-presence]', ...args);
+}
+
+// Dump a compact snapshot of the current internal state (users map)
+function debugState() {
+    if (!DEBUG) return;
+    const snapshot = {};
+    for (const [k, v] of users.entries()) {
+        snapshot[k] = {
+            direction: v.direction,
+            state: v.element.classList.contains('is-walking') ? 'walking' : 'idle',
+            hasAuto: !!v._autoBehavior,
+            hasAnimationTimeout: !!v.animationTimeout
+        };
+    }
+    console.log('[user-presence] STATE SNAPSHOT', snapshot);
+}
+
 // This will store user data
 const users = new Map();
 const avatarContainer = document.getElementById('avatar-container');
@@ -14,11 +37,17 @@ const client = new tmi.Client({
     channels: [ channelName ]
 });
 
-client.connect().catch(console.error);
+client.connect()
+    .then(() => log('Connected to Twitch channel', channelName))
+    .catch(err => {
+        console.error(err);
+        log('connect error', err);
+    });
 
 client.on('message', (channel, tags, message, self) => {
     if (self) return;
     const username = tags['display-name'] || tags.username;
+    log('message received', { channel, username, message });
     handleNewMessage(username);
 });
 
@@ -27,12 +56,15 @@ client.on('message', (channel, tags, message, self) => {
 
 function handleNewMessage(username) {
     // If user doesn't exist, create them in an 'idle' state
-    if (!users.has(username)) {
+    const isNew = !users.has(username);
+    if (isNew) {
         createAvatar(username);
     }
 
     const user = users.get(username);
     const avatarElement = user.element;
+
+    log('handleNewMessage', { username, isNew, direction: user.direction });
 
     // Make the character walk when they send a message
     avatarElement.classList.remove('idle');
@@ -48,6 +80,7 @@ function handleNewMessage(username) {
         avatarElement.classList.add('idle');
         // Update the animation to the idle variant for the current direction
         applyAnimationName(avatarElement, user.direction || 'left');
+        log('returned to idle', { username, direction: user.direction });
     }, 5000); // Walk for 5 seconds
 }
 
@@ -73,6 +106,8 @@ function createAvatar(username) {
     // Add the avatar to the screen
     avatarContainer.appendChild(avatarElement);
 
+    log('created avatar', { username, left: avatarElement.style.left });
+
     // Store the user's data
     users.set(username, {
         element: avatarElement,
@@ -96,6 +131,7 @@ function applyAnimationName(avatarElement, direction) {
     const animationName = `${prefix}-${dir}`;
     // Set inline style so it overrides stylesheet animation name
     avatarElement.style.animationName = animationName;
+    log('applyAnimationName', { animationName, direction, isWalking });
 }
 
 // Public: change a single user's direction from code
@@ -104,6 +140,7 @@ function setUserDirection(username, direction) {
     if (!user) return false;
     user.direction = direction;
     applyAnimationName(user.element, direction);
+    log('setUserDirection', { username, direction });
     return true;
 }
 
@@ -113,6 +150,7 @@ function setAllDirections(direction) {
         user.direction = direction;
         applyAnimationName(user.element, direction);
     }
+    log('setAllDirections', { direction });
 }
 
 // Expose the functions to the global window so they can be called from external code
@@ -135,6 +173,7 @@ function setUserState(username, state) {
         el.classList.add('idle');
     }
     applyAnimationName(el, user.direction || 'left');
+    log('setUserState', { username, state });
     return true;
 }
 
@@ -142,6 +181,7 @@ function setAllStates(state) {
     for (const [username] of users.entries()) {
         setUserState(username, state);
     }
+    log('setAllStates', { state });
 }
 
 // Start walking for a user for an optional duration (ms). If duration omitted, defaults to 5000.
@@ -158,7 +198,9 @@ function startUserWalking(username, duration = 5000) {
         el.classList.add('idle');
         applyAnimationName(el, user.direction || 'left');
         user.animationTimeout = null;
+        log('startUserWalking completed', { username });
     }, duration);
+    log('startUserWalking', { username, duration });
     return true;
 }
 
@@ -171,6 +213,7 @@ function stopUserWalking(username) {
     el.classList.remove('is-walking');
     el.classList.add('idle');
     applyAnimationName(el, user.direction || 'left');
+    log('stopUserWalking', { username });
     return true;
 }
 
@@ -225,6 +268,7 @@ function startAutoBehavior(username, opts = {}) {
 
     // store a flag so stopAutoBehavior can be used
     user._autoBehavior = true;
+    log('startAutoBehavior', { username, opts });
     scheduleNext();
     return true;
 }
@@ -237,6 +281,7 @@ function stopAutoBehavior(username) {
         user.autoTimeout = null;
     }
     user._autoBehavior = false;
+    log('stopAutoBehavior', { username });
     return true;
 }
 
@@ -244,12 +289,14 @@ function startAllAuto(opts = {}) {
     for (const [username] of users.entries()) {
         startAutoBehavior(username, opts);
     }
+    log('startAllAuto', { opts });
 }
 
 function stopAllAuto() {
     for (const [username] of users.entries()) {
         stopAutoBehavior(username);
     }
+    log('stopAllAuto');
 }
 
 window.startAutoBehavior = startAutoBehavior;
