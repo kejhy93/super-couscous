@@ -179,5 +179,83 @@ window.setAllStates = setAllStates;
 window.startUserWalking = startUserWalking;
 window.stopUserWalking = stopUserWalking;
 
+// --- Autonomous behavior (randomly switch between idle and walking + change directions) ---
+function startAutoBehavior(username, opts = {}) {
+    const user = users.get(username);
+    if (!user) return false;
+
+    // Stop existing auto behavior if any
+    stopAutoBehavior(username);
+
+    const {
+        minInterval = 2000,
+        maxInterval = 8000,
+        walkChance = 0.5,
+        minWalk = 1000,
+        maxWalk = 5000
+    } = opts;
+
+    const directions = ['left', 'right', 'up', 'down'];
+
+    function randBetween(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+    function scheduleNext() {
+        // schedule next autonomous action
+        const wait = randBetween(minInterval, maxInterval);
+        user.autoTimeout = setTimeout(() => {
+            if (!users.has(username)) return; // user removed
+
+            // choose direction and whether to walk
+            const dir = directions[Math.floor(Math.random() * directions.length)];
+            user.direction = dir;
+            applyAnimationName(user.element, dir);
+
+            const doWalk = Math.random() < walkChance;
+            if (doWalk) {
+                const walkDur = randBetween(minWalk, maxWalk);
+                startUserWalking(username, walkDur);
+            } else {
+                stopUserWalking(username);
+            }
+
+            // continue scheduling
+            scheduleNext();
+        }, wait);
+    }
+
+    // store a flag so stopAutoBehavior can be used
+    user._autoBehavior = true;
+    scheduleNext();
+    return true;
+}
+
+function stopAutoBehavior(username) {
+    const user = users.get(username);
+    if (!user) return false;
+    if (user.autoTimeout) {
+        clearTimeout(user.autoTimeout);
+        user.autoTimeout = null;
+    }
+    user._autoBehavior = false;
+    return true;
+}
+
+function startAllAuto(opts = {}) {
+    for (const [username] of users.entries()) {
+        startAutoBehavior(username, opts);
+    }
+}
+
+function stopAllAuto() {
+    for (const [username] of users.entries()) {
+        stopAutoBehavior(username);
+    }
+}
+
+window.startAutoBehavior = startAutoBehavior;
+window.stopAutoBehavior = stopAutoBehavior;
+window.startAllAuto = startAllAuto;
+window.stopAllAuto = stopAllAuto;
+
 handleNewMessage('hejnaluk');
 setUserDirection('hejnaluk', 'down');
