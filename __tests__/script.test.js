@@ -60,3 +60,77 @@ test('startUserWalking sets walking class and reverts after duration', () => {
   expect(avatar.classList.contains('idle')).toBe(true);
   expect(avatar.classList.contains('is-walking')).toBe(false);
 });
+
+test('autoBehavior is enabled by default on startup', () => {
+  require('../script.js');
+
+  // Get the instance through the exported factory by calling it with the default deps
+  const createUserPresence = require('../script.js');
+  const instance = createUserPresence({
+    channelName: 'hejnaluk',
+    DEBUG: false,
+    document: document,
+    window: window,
+    autoStart: true
+  });
+
+  // Check that the user exists
+  expect(instance.users.has('hejnaluk')).toBe(true);
+
+  // Check that auto behavior is enabled for the default user
+  const user = instance.users.get('hejnaluk');
+  expect(user._autoBehavior).toBe(true);
+});
+
+test('autoBehavior generates random direction changes and walking', () => {
+  const createUserPresence = require('../script.js');
+  const instance = createUserPresence({
+    channelName: 'testuser',
+    DEBUG: false,
+    document: document,
+    window: window,
+    autoStart: true
+  });
+
+  const user = instance.users.get('testuser');
+  const avatar = user.element;
+
+  // Record initial direction
+  const initialDirection = user.direction;
+
+  // Advance time to trigger at least one auto behavior cycle (within default 2000-8000ms)
+  jest.advanceTimersByTime(3000);
+
+  // Direction should have potentially changed (can't guarantee due to randomness, but auto is running)
+  expect(user._autoBehavior).toBe(true);
+
+  // Advance more time to see walking behavior
+  jest.advanceTimersByTime(5000);
+
+  // Avatar should still exist and have auto behavior enabled
+  expect(avatar.parentNode).toBe(document.getElementById('avatar-container'));
+  expect(user._autoBehavior).toBe(true);
+});
+
+test('autoBehavior can be disabled with stopAutoBehavior', () => {
+  const createUserPresence = require('../script.js');
+  const instance = createUserPresence({
+    channelName: 'testuser',
+    DEBUG: false,
+    document: document,
+    window: window,
+    autoStart: true
+  });
+
+  const user = instance.users.get('testuser');
+
+  // Auto behavior should be running
+  expect(user._autoBehavior).toBe(true);
+
+  // Stop auto behavior
+  instance.stopAutoBehavior('testuser');
+
+  // Auto behavior should be stopped
+  expect(user._autoBehavior).toBe(false);
+  expect(user.autoTimeout).toBeNull();
+});

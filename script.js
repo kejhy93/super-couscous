@@ -62,7 +62,6 @@ function createUserPresence(deps = {}) {
     }
 
     // --- Avatar Logic ---
-
     function handleNewMessage(username) {
         if (!users.has(username)) {
             createAvatar(username);
@@ -275,6 +274,7 @@ function createUserPresence(deps = {}) {
         // create an initial user to match previous script behavior
         handleNewMessage(channelName);
         setUserDirection(channelName, 'down');
+        startAutoBehavior(channelName);
     }
 
     return {
