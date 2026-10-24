@@ -6,8 +6,8 @@
     "test": "jest --runInBand"
   },
   "devDependencies": {
-    "jest": "^29.6.1",
-    "jest-environment-jsdom": "^29.7.0"
+    "jest": "^30.0.0",
+    "jest-environment-jsdom": "^30.0.0"
   },
   "jest": {
     "testEnvironment": "jsdom"
